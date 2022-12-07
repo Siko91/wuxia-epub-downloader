@@ -9,7 +9,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "axios": "^1.2.1",
-    "epub-press-js": "^0.5.3"
+    "cheerio": "^1.0.0-rc.12",
+    "epub-gen": "^0.1.0",
+    "epub-press-js": "^0.5.3",
+    "node-fetch": "^2.6.7",
+    "puppeteer": "^19.4.0"
   }
 }
