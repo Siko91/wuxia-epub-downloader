@@ -3,6 +3,8 @@ const fetch = require("node-fetch");
 const puppeteer = require("puppeteer");
 const fs = require("fs");
 const epub = require("epub-gen");
+const bookList = require("./bookList.json");
+const headers = require("./headers.json");
 
 const selectors = {
   info: {
@@ -18,40 +20,9 @@ const selectors = {
   },
 };
 
-const headers = {
-  //   Host: "readnovelfull.com",
-  "User-Agent":
-    "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:107.0) Gecko/20100101 Firefox/107.0",
-  Accept:
-    "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-  "Accept-Language": "en-US,en;q=0.5",
-  "Accept-Encoding": "gzip, deflate, br",
-  DNT: "1",
-  //   "Alt-Used": "readnovelfull.com",
-  Connection: "keep-alive",
-  //   "Upgrade-Insecure-Requests": "1",
-  //   "Sec-Fetch-Dest": "document",
-  //   "Sec-Fetch-Mode": "navigate",
-  //   "Sec-Fetch-Site": "none",
-  //   "Sec-Fetch-User": "?1",
-  //   "Sec-GPC": "1",
-  TE: "trailers",
-};
-
-const bookList = [
-  "https://readnovelfull.com/pursuit-of-the-truth-v1.html",
-  "https://readnovelfull.com/a-will-eternal.html",
-  "https://readnovelfull.com/renegade-immortal.html",
-  "https://readnovelfull.com/i-shall-seal-the-heavens.html",
-];
-
-downloadBook("https://readnovelfull.com/pursuit-of-the-truth-v1.html")
-  .then((i) => {
-    console.log("DONE");
-  })
-  .catch((err) => {
-    console.error(err.stack);
-  });
+Promise.all(bookList.map((url) => downloadBook(url)))
+  .then((i) => console.log("DONE"))
+  .catch((err) => console.error(err.stack));
 
 async function downloadBook(url) {
   const info = await parseInfo(url);
@@ -123,9 +94,15 @@ async function downloadChapters(info) {
 }
 
 async function constructBook(info) {
+  const output = `./books/${info.title}.epub`;
+  if (fs.existsSync(output)) {
+    console.log("Skipping book as it already exists : " + output);
+    return;
+  }
+
   await new epub({
     title: info.title,
-    output: `books/${info.title}.epub`,
+    output,
     content: [
       {
         title: "About",
