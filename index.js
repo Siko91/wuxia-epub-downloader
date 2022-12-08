@@ -85,7 +85,7 @@ async function parseInfo(url) {
     info.chapters.push({
       title,
       url: chapter$(chapEl).attr("href"),
-      tempFile: `temp/${info.id}/${i}-${title.replace(/\//g, "-").trim()}.html`,
+      tempFile: `temp/${info.id}/${i}-${title.replace(/(\/|<|>)/g, "-").trim()}.html`,
     });
   }
 
