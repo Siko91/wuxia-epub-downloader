@@ -10,6 +10,7 @@ const selectors = {
   info: {
     novelId: ".rate-info #rating",
     title: ".desc .title",
+    cover: ".books .book img",
     meta: ".desc .info-meta",
     description: "#tab-description .desc-text",
     moreFromAuthorList: "#tab-author .list-thumb a",
@@ -20,9 +21,15 @@ const selectors = {
   },
 };
 
-Promise.all(bookList.map((url) => downloadBook(url)))
+downloadBooks(bookList)
   .then((i) => console.log("DONE"))
   .catch((err) => console.error(err.stack));
+
+async function downloadBooks(urls) {
+  for (let i = 0; i < urls.length; i++) {
+    await downloadBook(urls[i]);
+  }
+}
 
 async function downloadBook(url) {
   const info = await parseInfo(url);
@@ -37,7 +44,9 @@ async function parseInfo(url) {
   const info = {
     novelId: "",
     title: "",
+    cover: "",
     meta: "",
+    author: [""],
     description: "",
     moreFromAuthor: [{ url: "", title: "" }],
     chapters: [{ url: "", title: "", tempFile: "" }],
@@ -45,7 +54,11 @@ async function parseInfo(url) {
 
   info.id = $(selectors.info.novelId).attr("data-novel-id");
   info.title = $($(selectors.info.title)[0]).text();
+  info.cover = $(selectors.info.cover).attr("src");
   info.meta = $(selectors.info.meta).html();
+  info.author = asArray($("a"))
+    .filter((a) => ($(a).attr("href") || "").indexOf("/authors/") >= 0)
+    .map((a) => $(a).text());
   info.description = $(selectors.info.description).text();
   info.moreFromAuthor = [];
   info.chapters = [];
@@ -72,7 +85,7 @@ async function parseInfo(url) {
     info.chapters.push({
       title,
       url: chapter$(chapEl).attr("href"),
-      tempFile: `temp/${info.id}/${i}-${title}.html`,
+      tempFile: `temp/${info.id}/${i}-${title.replace(/\//g, "-").trim()}.html`,
     });
   }
 
@@ -103,6 +116,8 @@ async function constructBook(info) {
   await new epub({
     title: info.title,
     output,
+    author: info.author,
+    cover: info.cover,
     content: [
       {
         title: "About",
@@ -126,4 +141,10 @@ async function constructBook(info) {
       }),
     ],
   }).promise;
+}
+
+function asArray(arrayLike) {
+  const results = [];
+  for (let i = 0; i < arrayLike.length; i++) results.push(arrayLike[i]);
+  return results;
 }
